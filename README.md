@@ -1,2 +1,1 @@
-# Web-Notes
-Web note taking 
+# web notes
