@@ -1,6 +1,8 @@
-import React from "react";
+
+import { useState } from "react";
+ // @ts-ignore
+import fuzzysearch from "fuzzysearch";
 import { SearchPopupItem } from "./SearchPopupItems";
-import { SearchIcon } from "../../assets/icons/SearchIcon";
 
 
 
@@ -8,17 +10,14 @@ interface SearchPopupItemProps {
     items: SearchPopupItem[];
 }
 
-//TODO : add fuzzy find to the search
-//TODO : remove input tag focus highlighting
 const SearchPopupItemComponent = ({ items }: SearchPopupItemProps) => {
     return (
         <>
             {items.map((item, index) => (
                 <div key={index} className="flex flex-row gap-2 items-center w-full h-8 p-2">
                     <div className="w-1/4 h-4">
-                    {item.icon}
+                        {item.icon}
                     </div>
-                    
                     <h5>{item.name}</h5>
                 </div>
             ))}
@@ -26,17 +25,36 @@ const SearchPopupItemComponent = ({ items }: SearchPopupItemProps) => {
     );
 };
 
-export const SearchPopup = () => {
-    const items: SearchPopupItem[] = [{ name: "Definition", icon: <SearchIcon /> }];
+export const SearchPopup = ({ items }: SearchPopupItemProps) => {
+
+    const [searchQuery, setSearchQuery] = useState("");
+    const [filteredItems, setFilteredItems] = useState<SearchPopupItem[]>(items);
+
+    // Handle search input change
+    const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const query = e.target.value.toLowerCase();
+        setSearchQuery(query);
+
+        if (query.trim()) {
+            const results = items.filter(item =>
+                fuzzysearch(query, item.name.toLowerCase())
+            );
+            setFilteredItems(results);
+        } else {
+            setFilteredItems(items); // Reset to original items if query is empty
+        }
+    };
 
     return (
         <div className="flex flex-col w-60 p-2 h-auto border rounded-lg border-purple-500">
             <input
                 type="text"
-                className="flex flex-col pt-2 h-8 w-full border border-purple-600 rounded "
+                className="flex flex-col pt-2 h-8 w-full border border-purple-600 rounded focus:outline-none"
+                onChange={handleSearchChange}
+                value={searchQuery}
             />
             <section id="Auto-completion-item">
-                <SearchPopupItemComponent items={items} />
+                <SearchPopupItemComponent items={filteredItems} /> 
             </section>
         </div>
     );
